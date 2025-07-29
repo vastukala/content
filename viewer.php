@@ -3,7 +3,7 @@ session_start();
 require_once 'config.php';
 
 // Get content ID from URL
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 // Check if this is a download request
 if (isset($_GET['download'])) {
@@ -83,25 +83,43 @@ if (!$content || ($content['view_restricted'] && (!isset($_SESSION['role']) || $
 	exit();
 }
 
-// Function to get file type from path
+// Function to get file type from path or URL (add YouTube detection)
 function getFileType($filePath)
 {
+	// YouTube detection - check both URL patterns and video_type
+	if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^\s&\/\?]+)/i', $filePath)) {
+		return 'youtube';
+	}
 	$ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-	if ($ext === 'pdf') return 'pdf';
-	if (in_array($ext, ['mp4', 'avi', 'mov', 'wmv'])) return 'video';
-	if (in_array($ext, ['mp3', 'wav', 'aac', 'ogg', 'flac'])) return 'audio';
-	if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])) return 'image';
-	if (in_array($ext, ['doc', 'docx'])) return 'doc';
-	if (in_array($ext, ['ppt', 'pptx'])) return 'ppt';
-	if (in_array($ext, ['xls', 'xlsx', 'csv'])) return 'excel';
+	if ($ext === 'pdf')
+		return 'pdf';
+	if (in_array($ext, ['mp4', 'avi', 'mov', 'wmv']))
+		return 'video';
+	if (in_array($ext, ['mp3', 'wav', 'aac', 'ogg', 'flac']))
+		return 'audio';
+	if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']))
+		return 'image';
+	if (in_array($ext, ['doc', 'docx']))
+		return 'doc';
+	if (in_array($ext, ['ppt', 'pptx']))
+		return 'ppt';
+	if (in_array($ext, ['xls', 'xlsx', 'csv']))
+		return 'excel';
 	// Fallback to folder-based detection
-	if (strpos($filePath, '/pdf/') !== false) return 'pdf';
-	if (strpos($filePath, '/video/') !== false) return 'video';
-	if (strpos($filePath, '/audio/') !== false) return 'audio';
-	if (strpos($filePath, '/image/') !== false) return 'image';
-	if (strpos($filePath, '/doc/') !== false) return 'doc';
-	if (strpos($filePath, '/ppt/') !== false) return 'ppt';
-	if (strpos($filePath, '/excel/') !== false) return 'excel';
+	if (strpos($filePath, '/pdf/') !== false)
+		return 'pdf';
+	if (strpos($filePath, '/video/') !== false)
+		return 'video';
+	if (strpos($filePath, '/audio/') !== false)
+		return 'audio';
+	if (strpos($filePath, '/image/') !== false)
+		return 'image';
+	if (strpos($filePath, '/doc/') !== false)
+		return 'doc';
+	if (strpos($filePath, '/ppt/') !== false)
+		return 'ppt';
+	if (strpos($filePath, '/excel/') !== false)
+		return 'excel';
 	return 'unknown';
 }
 
@@ -113,10 +131,10 @@ $canViewContent = !$content['is_restricted'] ||
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Document Viewer</title>
 	<title>Content Viewer</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 	<style>
@@ -220,12 +238,101 @@ $canViewContent = !$content['is_restricted'] ||
 		#excel-preview-wrapper {
 			user-select: none;
 		}
+
+		.viewer-container {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+
+		.preview-container {
+			background: #fff;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			overflow: hidden;
+			margin-bottom: 20px;
+		}
+
+		/* Responsive styles */
+		@media (max-width: 768px) {
+			.viewer-container {
+				padding: 10px;
+			}
+
+			.preview-container {
+				border-radius: 4px;
+				margin-bottom: 10px;
+			}
+
+			/* Adjust video player */
+			.video-container iframe,
+			.video-container video {
+				height: auto !important;
+				aspect-ratio: 16/9;
+			}
+
+			/* Adjust audio player */
+			.audio-container {
+				padding: 10px !important;
+			}
+
+			/* Adjust document viewers */
+			#docx-preview,
+			#excel-preview,
+			#pptx-viewer-container {
+				width: 100% !important;
+				height: auto !important;
+				min-height: 300px;
+			}
+
+			/* Adjust buttons */
+			.btn {
+				padding: 0.25rem 0.5rem;
+				font-size: 0.9rem;
+				white-space: nowrap;
+			}
+
+			/* Adjust PDF viewer */
+			embed[type="application/pdf"] {
+				min-height: 60vh;
+			}
+
+			/* Adjust image viewer */
+			.img-fluid {
+				max-height: 70vh;
+			}
+		}
+
+		/* Extra small devices */
+		@media (max-width: 480px) {
+			.viewer-container {
+				padding: 5px;
+			}
+
+			/* Stack buttons on small screens */
+			.btn-group {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
+
+			.btn-group .btn {
+				margin: 2px 0;
+				width: 100%;
+			}
+
+			/* Adjust font sizes */
+			h1 { font-size: 1.5rem; }
+			h2 { font-size: 1.3rem; }
+			h3 { font-size: 1.1rem; }
+			p, div { font-size: 0.9rem; }
+		}
 	</style>
 </head>
 
-<body>
-	<div class="viewer-container">
-		<div class="preview-container">
+<body style="margin:0;padding:0;overflow-x:hidden;">
+	<div class="viewer-container" style="width:100%;max-width:100vw;margin:0;padding:0;">
+		<div class="preview-container" style="width:100%;max-width:100%;padding:15px;box-sizing:border-box;">
 			<?php if (isset($_GET['message']) && $_GET['message'] === 'request_sent'): ?>
 				<div class="alert alert-success" role="alert">
 					Your request has been sent. You will be notified once it's approved.
@@ -242,21 +349,49 @@ $canViewContent = !$content['is_restricted'] ||
 					<?php elseif ($content['request_status'] === 'approved'): ?>
 						<!-- Show content for approved users -->
 						<?php if ($fileType === 'pdf'): ?>
-							<embed src="<?php echo htmlspecialchars($content['file_path']); ?>" type="application/pdf" width="100%" height="100%">
-						<?php elseif ($fileType === 'video'): ?>
-							<?php 
-							$isYoutube = isset($content['video_type']) && $content['video_type'] === 'youtube';
+							<embed src="<?php echo htmlspecialchars($content['file_path']); ?>" type="application/pdf" width="100%"
+								height="100%">
+						<?php elseif ($fileType === 'video' || $fileType === 'youtube'): ?>
+							<?php
+							// Check if it's a YouTube video by URL or video_type
+							$isYoutube = $fileType === 'youtube' || 
+								(isset($content['video_type']) && $content['video_type'] === 'youtube');
 							$youtubeId = '';
+							
 							if ($isYoutube) {
 								// Extract YouTube video ID from URL
 								preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^\s&\/\?]+)/i', $content['file_path'], $matches);
 								$youtubeId = $matches[1] ?? '';
+								
+								// If we still don't have an ID, try to get it from the file_path directly
+								if (empty($youtubeId) && !empty($content['file_path'])) {
+									$youtubeId = basename($content['file_path']);
+								}
 							}
 							?>
-							<div id="video-container" style="width:100%;max-width:800px;margin:0 auto;position:relative;background:#000;">
-								<?php if ($isYoutube && $youtubeId): ?>
+							<div id="video-container"
+								style="width:100%;max-width:800px;margin:0 auto;position:relative;background:#000;">
+								<?php if ($isYoutube && !empty($youtubeId)): ?>
 									<!-- YouTube Player -->
-									<div id="youtube-player"></div>
+									<div id="youtube-player" style="width:100%;height:0;padding-bottom:56.25%;position:relative;">
+										<iframe id="youtube-iframe" width="100%" height="100%" style="position:absolute;top:0;left:0;"
+											src="https://www.youtube.com/embed/<?php echo htmlspecialchars($youtubeId); ?>?enablejsapi=1&controls=1&rel=0&modestbranding=1&autoplay=1"
+											frameborder="0"
+											allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+											allowfullscreen></iframe>
+									</div>
+									<!-- Preview Lock Overlay -->
+									<div id="preview-lock"
+										style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;z-index:10;display:none;">
+										<h4>Preview Locked</h4>
+										<p>You've reached the 30-second preview limit.</p>
+										<p>Please sign in or purchase to watch the full video.</p>
+										<?php if (!isset($_SESSION['user_id'])): ?>
+											<a href="login.html" class="btn btn-primary">Sign In</a>
+										<?php else: ?>
+											<button class="btn btn-primary" onclick="requestFullAccess()">Request Full Access</button>
+										<?php endif; ?>
+									</div>
 								<?php else: ?>
 									<!-- HTML5 Video Player -->
 									<video id="preview-video" style="width:100%;max-height:80vh;display:block;">
@@ -264,9 +399,10 @@ $canViewContent = !$content['is_restricted'] ||
 										Your browser does not support the video tag.
 									</video>
 								<?php endif; ?>
-								
+
 								<!-- Preview Lock Overlay -->
-								<div id="preview-lock" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;z-index:10;">
+								<div id="preview-lock"
+									style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;z-index:10;display:none;">
 									<h4>Preview Locked</h4>
 									<p>You've reached the 30-second preview limit.</p>
 									<p>Please sign in or purchase to watch the full video.</p>
@@ -281,38 +417,97 @@ $canViewContent = !$content['is_restricted'] ||
 								let previewVideo = document.getElementById('preview-video');
 								let previewLock = document.getElementById('preview-lock');
 								let previewTimer = null;
+								let youtubePlayer = null;
+								let isYouTube = <?php echo $isYoutube ? 'true' : 'false'; ?>;
+								let previewTimer = null;
+
+								// YouTube API callback
+								function onYouTubeIframeAPIReady() {
+									if (!isYouTube) return;
+
+									try {
+										youtubePlayer = new YT.Player('youtube-iframe', {
+											height: '100%',
+											width: '100%',
+											videoId: '<?php echo $youtubeId; ?>',
+											playerVars: {
+												'autoplay': 1,
+												'controls': 1,
+												'rel': 0,
+												'modestbranding': 1,
+												'fs': 0,
+												'enablejsapi': 1,
+												'origin': window.location.origin
+											},
+											events: {
+												'onReady': onPlayerReady,
+												'onStateChange': onPlayerStateChange
+											}
+										});
+									} catch (e) {
+										console.error('Error initializing YouTube player:', e);
+									}
+								}
+
+								function onPlayerReady(event) {
+									try {
+										event.target.playVideo().catch(error => {
+											console.error('Error playing video:', error);
+										});
+										// Start the 30-second timer when video starts playing
+										if (previewTimer) clearTimeout(previewTimer);
+										previewTimer = setTimeout(stopVideo, 30000);
+									} catch (e) {
+										console.error('Error in onPlayerReady:', e);
+									}
+								}
+
+								function onPlayerStateChange(event) {
+									// If video ends or is paused, clear the timer
+									if (event.data == YT.PlayerState.ENDED || event.data == YT.PlayerState.PAUSED) {
+										if (previewTimer) clearTimeout(previewTimer);
+									}
+								}
+
+								function stopVideo() {
+									try {
+										if (isYouTube && youtubePlayer) {
+											youtubePlayer.pauseVideo();
+											document.getElementById('preview-lock').style.display = 'flex';
+										} else if (previewVideo) {
+											previewVideo.pause();
+											document.getElementById('preview-lock').style.display = 'flex';
+										}
+									} catch (e) {
+										console.error('Error stopping video:', e);
+									}
+								}
 
 								function playPreviewVideo() {
-									previewVideo.play();
-									previewLock.style.display = 'none';
-									if (previewTimer) clearTimeout(previewTimer);
-									previewTimer = setTimeout(function() {
-										previewVideo.pause();
-										previewLock.style.display = 'flex';
-									}, 30000);
-									const video = document.getElementById('video-preview');
-									const overlay = video.parentElement.querySelector('.video-overlay');
-									const playBtn = video.parentElement.querySelector('.custom-play-btn');
-									overlay.style.display = 'none';
-									playBtn.style.visibility = 'hidden';
-									video.play();
-									let maxTime = null;
-									video.addEventListener('loadedmetadata', function() {
-										maxTime = video.duration * 0.15;
-									});
-									video.addEventListener('timeupdate', function() {
-										if (maxTime && video.currentTime >= maxTime) {
-											video.pause();
-											video.currentTime = maxTime;
-											document.getElementById('video-msg').style.display = 'block';
-											showVideoPurchaseModal();
+									try {
+										if (isYouTube) {
+											// YouTube video will be handled by the API
+											previewLock.style.display = 'none';
+											if (youtubePlayer) {
+												youtubePlayer.playVideo().catch(error => {
+													console.error('Error playing video:', error);
+												});
+												// Reset and start the 30-second timer
+												if (previewTimer) clearTimeout(previewTimer);
+												previewTimer = setTimeout(stopVideo, 30000);
+											}
+										} else if (previewVideo) {
+											// Regular HTML5 video
+											previewVideo.play().catch(error => {
+												console.error('Error playing video:', error);
+											});
+											previewLock.style.display = 'none';
+											if (previewTimer) clearTimeout(previewTimer);
+											previewTimer = setTimeout(stopVideo, 30000);
 										}
-									});
-									video.addEventListener('seeking', function() {
-										if (maxTime && video.currentTime > maxTime) {
-											video.currentTime = maxTime;
-										}
-									});
+									} catch (e) {
+										console.error('Error in playPreviewVideo:', e);
+									}
 								}
 
 								function showVideoPurchaseModal() {
@@ -348,14 +543,20 @@ $canViewContent = !$content['is_restricted'] ||
 							</script>
 						<?php elseif ($fileType === 'audio'): ?>
 							<div class="audio-container" style="position:relative;width:100%;max-width:600px;margin:auto;">
-								<div id="custom-audio-player" style="width:100%;background:#f8f9fa;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;flex-direction:column;align-items:center;">
+								<div id="custom-audio-player"
+									style="width:100%;background:#f8f9fa;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;flex-direction:column;align-items:center;">
 									<button id="audio-start-btn" class="btn btn-success mb-2" style="width:120px;">Start</button>
-									<button id="audio-stop-btn" class="btn btn-danger mb-2" style="width:120px;display:none;">Stop</button>
+									<button id="audio-stop-btn" class="btn btn-danger mb-2"
+										style="width:120px;display:none;">Stop</button>
 									<div id="audio-status" class="text-muted mb-2">Preview: First 30 seconds only</div>
-									<audio id="audio-preview" src="<?php echo htmlspecialchars($previewFile); ?>" preload="metadata" style="display:none;"></audio>
-									<div id="audio-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;cursor:not-allowed;"></div>
+									<audio id="audio-preview" src="<?php echo htmlspecialchars($previewFile); ?>" preload="metadata"
+										style="display:none;"></audio>
+									<div id="audio-overlay"
+										style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;cursor:not-allowed;">
+									</div>
 								</div>
-								<div id="audio-msg" class="text-danger small mt-2" style="display:none;text-align:center;">Preview ended. Please purchase to access full audio.</div>
+								<div id="audio-msg" class="text-danger small mt-2" style="display:none;text-align:center;">Preview
+									ended. Please purchase to access full audio.</div>
 							</div>
 							<script>
 								document.addEventListener('DOMContentLoaded', function() {
@@ -429,7 +630,8 @@ $canViewContent = !$content['is_restricted'] ||
 						<?php else: ?>
 							<div class="file-message">
 								<p>Preview not available for this file type.</p>
-								<p><a href="viewer.php?id=<?php echo $id; ?>&download=1" class="btn btn-primary">Download to view</a></p>
+								<p><a href="viewer.php?id=<?php echo $id; ?>&download=1" class="btn btn-primary">Download to
+										view</a></p>
 							</div>
 						<?php endif; ?>
 					<?php elseif ($content['request_status'] === 'pending'): ?>
@@ -443,8 +645,10 @@ $canViewContent = !$content['is_restricted'] ||
 			<?php else: ?>
 				<div class="preview-container mb-2">
 					<?php if ($fileType === 'image'): ?>
-						<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;">
-							<img src="<?php echo htmlspecialchars($previewFile); ?>" alt="Preview" class="img-fluid" style="max-width:100vw;max-height:100vh;object-fit:contain;" id="preview-image">
+						<div
+							style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;">
+							<img src="<?php echo htmlspecialchars($previewFile); ?>" alt="Preview" class="img-fluid"
+								style="max-width:100vw;max-height:100vh;object-fit:contain;" id="preview-image">
 						</div>
 						<script>
 							document.addEventListener('DOMContentLoaded', function() {
@@ -457,12 +661,18 @@ $canViewContent = !$content['is_restricted'] ||
 							});
 						</script>
 					<?php elseif ($fileType === 'video'): ?>
-						<div class="video-preview-container" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;">
-							<video id="video-preview" src="<?php echo htmlspecialchars($previewFile); ?>" style="width:100vw;height:100vh;object-fit:contain;display:block;background:#000;"></video>
-							<div class="video-overlay" style="position:absolute;top:0;left:0;width:100vw;height:100vh;z-index:2;cursor:not-allowed;"></div>
-							<button class="custom-play-btn" onclick="playPreviewVideo()" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;background:#28a745;color:#fff;border:none;border-radius:50%;width:64px;height:64px;font-size:2em;display:flex;align-items:center;justify-content:center;cursor:pointer;">▶</button>
+						<div class="video-preview-container"
+							style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;">
+							<video id="video-preview" src="<?php echo htmlspecialchars($previewFile); ?>"
+								style="width:100vw;height:100vh;object-fit:contain;display:block;background:#000;"></video>
+							<div class="video-overlay"
+								style="position:absolute;top:0;left:0;width:100vw;height:100vh;z-index:2;cursor:not-allowed;">
+							</div>
+							<button class="custom-play-btn" onclick="playPreviewVideo()"
+								style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;background:#28a745;color:#fff;border:none;border-radius:50%;width:64px;height:64px;font-size:2em;display:flex;align-items:center;justify-content:center;cursor:pointer;">▶</button>
 						</div>
-						<div id="video-msg" class="text-danger small mt-1" style="display:none;">Preview limited. Please request access to view full content.</div>
+						<div id="video-msg" class="text-danger small mt-1" style="display:none;">Preview limited. Please request
+							access to view full content.</div>
 						<script>
 							let videoPreviewTimer = null;
 
@@ -533,7 +743,9 @@ $canViewContent = !$content['is_restricted'] ||
 							});
 						</script>
 					<?php elseif ($fileType === 'doc' || $fileType === 'docx' || $fileType === 'word'): ?>
-						<div id="docx-preview" style="width:100%;max-width:800px;margin:0 auto;height:100vh;overflow:auto;border:1px solid #ccc;padding:20px;background:white;font-family:'Times New Roman',serif;line-height:1.6;"></div>
+						<div id="docx-preview"
+							style="width:100%;max-width:800px;margin:0 auto;height:100vh;overflow:auto;border:1px solid #ccc;padding:20px;background:white;font-family:'Times New Roman',serif;line-height:1.6;">
+						</div>
 						<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.7.0/mammoth.browser.min.js"></script>
 						<script>
 							function renderMammothDocPreview(blob) {
@@ -661,11 +873,16 @@ $canViewContent = !$content['is_restricted'] ||
 								text-align: justify;
 							}
 						</style>
-						<div class="text-muted small mt-2">If you do not see tables or formatting, please upload a DOCX file for best results.</div>
+						<div class="text-muted small mt-2">If you do not see tables or formatting, please upload a DOCX file for
+							best results.</div>
 					<?php elseif ($fileType === 'excel' || $fileType === 'xlsx' || $fileType === 'xls'): ?>
 						<div id="excel-preview-wrapper" style="width:100%;height:100vh;overflow:auto;background:#f8f9fa;">
-							<div id="excel-preview" style="width:fit-content;min-width:600px;margin:32px auto 0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:8px;overflow:auto;"></div>
-							<div id="excel-locked-msg" class="text-warning small mt-2" style="display:none;text-align:center;position:fixed;bottom:0;left:0;width:100%;background:#fff8e1;padding:8px 0;border-top:1px solid #ffc107;z-index:10;">Unlock full sheet by signing in or purchasing.</div>
+							<div id="excel-preview"
+								style="width:fit-content;min-width:600px;margin:32px auto 0 auto;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:8px;overflow:auto;">
+							</div>
+							<div id="excel-locked-msg" class="text-warning small mt-2"
+								style="display:none;text-align:center;position:fixed;bottom:0;left:0;width:100%;background:#fff8e1;padding:8px 0;border-top:1px solid #ffc107;z-index:10;">
+								Unlock full sheet by signing in or purchasing.</div>
 						</div>
 						<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 						<script>
@@ -787,7 +1004,9 @@ $canViewContent = !$content['is_restricted'] ||
 						</script>
 
 					<?php elseif ($fileType === 'pdf'): ?>
-						<div id="pdf-preview" style="width:100%;height:100vh;overflow:auto;border:1px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;box-sizing:border-box;"></div>
+						<div id="pdf-preview"
+							style="width:100%;height:100vh;overflow:auto;border:1px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;box-sizing:border-box;">
+						</div>
 						<div class="text-danger small mt-1">Preview limited. Please request access to view full content.</div>
 						<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 						<script>
@@ -832,124 +1051,76 @@ $canViewContent = !$content['is_restricted'] ||
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 	<!-- YouTube IFrame API -->
 	<script src="https://www.youtube.com/iframe_api"></script>
-	
+
 	<script>
-	// YouTube Player API
-	let youtubePlayer;
-	let previewTimer;
-	const PREVIEW_DURATION = 30; // 30 seconds preview
-	
-	function onYouTubeIframeAPIReady() {
-		const isYoutube = document.getElementById('youtube-player') !== null;
-		if (!isYoutube) return;
-		
-		youtubePlayer = new YT.Player('youtube-player', {
-			height: '480',
-			width: '100%',
-			videoId: '<?php echo $youtubeId ?? ''; ?>',
-			playerVars: {
-				'playsinline': 1,
-				'controls': 1,
-				'showinfo': 0,
-				'rel': 0,
-				'modestbranding': 1
-			},
-			events: {
-				'onReady': onPlayerReady,
-				'onStateChange': onPlayerStateChange
-			}
-		});
-	}
-	
-	function onPlayerReady(event) {
-		// Start the preview timer
-		startPreviewTimer();
-	}
-	
-	function onPlayerStateChange(event) {
-		// Pause video if it's playing beyond preview duration
-		if (event.data === YT.PlayerState.PLAYING) {
-			const currentTime = event.target.getCurrentTime();
-			if (currentTime > PREVIEW_DURATION) {
-				event.target.pauseVideo();
-				event.target.seekTo(PREVIEW_DURATION, true);
-				showPreviewLock();
+		// YouTube Player API - Moved to inline with the player
+
+		function showPreviewLock() {
+			try {
+				const lockElement = document.getElementById('preview-lock');
+				if (lockElement) {
+					lockElement.style.display = 'flex';
+				}
+			} catch (e) {
+				console.error('Error showing preview lock:', e);
 			}
 		}
-	}
-	
-	function startPreviewTimer() {
-		// Clear any existing timer
-		if (previewTimer) clearTimeout(previewTimer);
-		
-		// Set timer to show lock after preview duration
-		previewTimer = setTimeout(() => {
-			showPreviewLock();
-			if (youtubePlayer) {
-				youtubePlayer.pauseVideo();
-			}
-		}, PREVIEW_DURATION * 1000);
-	}
-	
-	function showPreviewLock() {
-		document.getElementById('preview-lock').style.display = 'flex';
-	}
-	
-	function requestFullAccess() {
-		// This function will be called when the request access button is clicked
-		const contentId = <?php echo $content['id']; ?>;
-		fetch('request_access.php', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: `content_id=${contentId}`
-		})
-		.then(response => response.json())
-		.then(data => {
-			if (data.success) {
-				alert('Your request has been submitted. You will be notified once approved.');
-				document.getElementById('preview-lock').innerHTML = `
+
+		function requestFullAccess() {
+			// This function will be called when the request access button is clicked
+			const contentId = <?php echo $content['id']; ?>;
+			fetch('request_access.php', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+					body: `content_id=${contentId}`
+				})
+				.then(response => response.json())
+				.then data => {
+					if (data.success) {
+						alert('Your request has been submitted. You will be notified once approved.');
+						document.getElementById('preview-lock').innerHTML = `
 					<h4>Request Submitted</h4>
 					<p>Your request is pending approval.</p>
 					<button class="btn btn-secondary" disabled>Processing...</button>
 				`;
-			} else {
-				alert('Error: ' + (data.message || 'Failed to process your request.'));
-			}
-		})
+					} else {
+						alert('Error: ' + (data.message || 'Failed to process your request.'));
+					}
+				})
 		.catch(error => {
 			console.error('Error:', error);
 			alert('An error occurred. Please try again.');
 		});
-	}
-	
-	// Handle HTML5 video preview timer
-	document.addEventListener('DOMContentLoaded', function() {
-		const video = document.getElementById('preview-video');
-		if (!video) return;
-		
-		video.addEventListener('timeupdate', function() {
-			// Show lock when reaching preview duration
-			if (video.currentTime >= PREVIEW_DURATION) {
-				video.pause();
-				showPreviewLock();
-			}
+		}
+
+		// Handle HTML5 video preview timer
+		document.addEventListener('DOMContentLoaded', function() {
+			const video = document.getElementById('preview-video');
+			if (!video) return;
+
+			video.addEventListener('timeupdate', function() {
+				// Show lock when reaching preview duration
+				if (video.currentTime >= PREVIEW_DURATION) {
+					video.pause();
+					showPreviewLock();
+				}
+			});
+
+			// Start the timer when video starts playing
+			video.addEventListener('play', startPreviewTimer);
+
+			// Pause the timer when video is paused
+			video.addEventListener('pause', function() {
+				if (previewTimer) clearTimeout(previewTimer);
+			});
 		});
-		
-		// Start the timer when video starts playing
-		video.addEventListener('play', startPreviewTimer);
-		
-		// Pause the timer when video is paused
-		video.addEventListener('pause', function() {
-			if (previewTimer) clearTimeout(previewTimer);
-		});
-	});
 		// Simple PPTX Preview - Working Implementation
 		function loadPptxPreview(filePath) {
 			const container = document.getElementById('pptx-preview');
 			if (!container) return;
-			
+
 			// Show simple preview with download option
 			container.innerHTML = `
 				<div style="
@@ -995,27 +1166,28 @@ $canViewContent = !$content['is_restricted'] ||
 				</div>
 			`;
 		}
-		
+
 		function showPptxInfo(filePath) {
-			fetch(filePath, { method: 'HEAD' })
+			fetch(filePath, {
+					method: 'HEAD'
+				})
 				.then(response => {
 					const size = response.headers.get('content-length');
 					const sizeKB = size ? Math.round(size / 1024) : 'Unknown';
-					
+
 					alert(`File Information:\n\nName: ${filePath.split('/').pop()}\nSize: ${sizeKB} KB\nType: PowerPoint Presentation (.pptx)\n\nTo view this presentation, please download it and open with:\n• Microsoft PowerPoint\n• LibreOffice Impress\n• Google Slides\n• Any compatible presentation software`);
-			})
-			.catch(() => {
-				alert(`File Information:\n\nName: ${filePath.split('/').pop()}\nType: PowerPoint Presentation (.pptx)\n\nTo view this presentation, please download it and open with compatible software.`);
-			});
+				})
+				.catch(() => {
+					alert(`File Information:\n\nName: ${filePath.split('/').pop()}\nType: PowerPoint Presentation (.pptx)\n\nTo view this presentation, please download it and open with compatible software.`);
+				});
 		}
-		
+
 		// Initialize PPTX preview if this is a PPTX file
 		<?php if ($fileExtension === 'pptx'): ?>
 			document.addEventListener('DOMContentLoaded', function() {
 				loadPptxPreview('<?php echo $filePath; ?>');
 			});
 		<?php endif; ?>
-		
 	</script>
 </body>
 

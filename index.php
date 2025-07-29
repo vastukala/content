@@ -217,13 +217,14 @@ if (isset($_SESSION['user_id'])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Content Management System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <meta charset="UTF-8">
@@ -322,24 +323,25 @@ if (isset($_SESSION['user_id'])) {
 </head>
 
 <body>
-    <div class="container">
+    <div class="container-fluid px-3 px-md-4 px-lg-5">
         <!-- Auth Buttons -->
         <div class="auth-buttons d-flex align-items-center">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="user-info d-flex align-items-center">
-                    <span class="me-2">Welcome, <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></span>
-                    <a href="logout.php" class="btn btn-outline-danger btn-sm" 
-                       style="border-radius: 20px; padding: 5px 15px; font-weight: 500; border-width: 2px;">
+                    <span class="me-2">Welcome,
+                        <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong></span>
+                    <a href="logout.php" class="btn btn-outline-danger btn-sm"
+                        style="border-radius: 20px; padding: 5px 15px; font-weight: 500; border-width: 2px;">
                         <i class="fas fa-sign-out-alt me-1"></i> Logout
                     </a>
                 </div>
             <?php else: ?>
-                <a href="login.html" class="btn btn-outline-primary me-3" 
-                   style="border-radius: 20px; padding: 8px 20px; font-weight: 500; border-width: 2px;">
+                <a href="login.html" class="btn btn-outline-primary me-3"
+                    style="border-radius: 20px; padding: 8px 20px; font-weight: 500; border-width: 2px;">
                     <i class="fas fa-sign-in-alt me-1"></i> Login
                 </a>
-                <a href="register.html" class="btn btn-primary" 
-                   style="border-radius: 20px; padding: 8px 20px; font-weight: 500; background: linear-gradient(135deg, #4a6cf7, #2541b2); border: none; box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);">
+                <a href="register.html" class="btn btn-primary"
+                    style="border-radius: 20px; padding: 8px 20px; font-weight: 500; background: linear-gradient(135deg, #4a6cf7, #2541b2); border: none; box-shadow: 0 2px 8px rgba(74, 108, 247, 0.3);">
                     <i class="fas fa-user-plus me-1"></i> Get Started
                 </a>
             <?php endif; ?>
@@ -348,15 +350,12 @@ if (isset($_SESSION['user_id'])) {
         <!-- Modern Search Bar -->
         <div class="search-container mb-5">
             <div class="position-relative">
-                <input type="text" 
-                       class="form-control form-control-lg shadow-sm border-0 rounded-pill ps-4 py-3" 
-                       id="searchInput" 
-                       placeholder="Search content..."
-                       style="background: #f8f9fa; color: #333; border: 2px solid #e0e0e0; transition: all 0.3s ease;">
-                <button class="btn btn-primary position-absolute end-0 top-0 h-100 rounded-pill px-4" 
-                        type="button" 
-                        id="searchButton"
-                        style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; background: linear-gradient(135deg, #4a6cf7, #2541b2); border: none; font-weight: 500;">
+                <input type="text" class="form-control form-control-lg shadow-sm border-0 rounded-pill ps-4 py-3"
+                    id="searchInput" placeholder="Search content..."
+                    style="background: #f8f9fa; color: #333; border: 2px solid #e0e0e0; transition: all 0.3s ease;">
+                <button class="btn btn-primary position-absolute end-0 top-0 h-100 rounded-pill px-4" type="button"
+                    id="searchButton"
+                    style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; background: linear-gradient(135deg, #4a6cf7, #2541b2); border: none; font-weight: 500;">
                     <i class="fas fa-search me-2"></i> Search
                 </button>
             </div>
@@ -376,9 +375,14 @@ if (isset($_SESSION['user_id'])) {
             'ppt' => []
         ];
         while ($row = mysqli_fetch_assoc($result)) {
-            $type = getFileType($row['file_path']);
-            if (isset($content_by_type[$type])) {
-                $content_by_type[$type][] = $row;
+            // Check if it's a YouTube video first
+            if (isset($row['video_type']) && $row['video_type'] === 'youtube' || !empty($row['youtube_url'])) {
+                $content_by_type['video'][] = $row;
+            } else {
+                $type = getFileType($row['file_path']);
+                if (isset($content_by_type[$type])) {
+                    $content_by_type[$type][] = $row;
+                }
             }
         }
         // 2. Sort types by number of files (descending)
@@ -404,10 +408,12 @@ if (isset($_SESSION['user_id'])) {
                     <div class="d-flex align-items-center mb-4">
                         <h3 class="section-title mb-0"
                             style="font-size:1.8rem;font-weight:700;letter-spacing:-0.5px;line-height:1.2;color:#2c3e50;text-transform:uppercase;position:relative;display:inline-block;padding-bottom:10px;">
-                            <span style="position:relative;z-index:1;background:linear-gradient(90deg, #3498db, #2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+                            <span
+                                style="position:relative;z-index:1;background:linear-gradient(90deg, #3498db, #2ecc71);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
                                 <?php echo $section_titles[$type]; ?>
                             </span>
-                            <span style="position:absolute;bottom:0;left:0;width:60px;height:4px;background:linear-gradient(90deg, #3498db, #2ecc71);border-radius:2px;"></span>
+                            <span
+                                style="position:absolute;bottom:0;left:0;width:60px;height:4px;background:linear-gradient(90deg, #3498db, #2ecc71);border-radius:2px;"></span>
                         </h3>
                     </div>
                     <div class="slider-container">
@@ -434,26 +440,53 @@ if (isset($_SESSION['user_id'])) {
                                         <?php if (!$row['view_restricted']): ?>
                                             <?php if ($type === 'audio'): ?>
                                                 <a href="audio_viewer.php?file=<?php echo urlencode($row['file_path']); ?>"
-                                                    class="btn btn-info btn-sm" target="_blank">
-                                                    <i class="fas fa-eye"></i> View
+                                                    class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                                    target="_blank"
+                                                    style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #3498db, #2ecc71); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    <i class="fas fa-eye me-1"></i> View
                                                 </a>
+                                            <?php elseif ((isset($row['video_type']) && $row['video_type'] === 'youtube') || preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^\s&\/\?]+)/i', $row['file_path'])): ?>
+                                                <?php
+                                                // Extract YouTube video ID from URL
+                                                $url = $row['file_path'];
+                                                $videoId = '';
+
+                                                // Handle different YouTube URL formats
+                                                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $url, $matches)) {
+                                                    $videoId = $matches[1];
+                                                } elseif (preg_match('/[?&]v=([^&]+)/i', $url, $matches)) {
+                                                    $videoId = $matches[1];
+                                                }
+
+                                                if (!empty($videoId)) {
+                                                    // Show a View button that links to the YouTube preview page
+                                                    ?>
+                                                    <a href="youtube_preview.php?v=<?php echo urlencode($videoId); ?>" 
+                                                       class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                                       style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #3498db, #2ecc71); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                        <i class="fas fa-eye me-1"></i> View
+                                                    </a>
+                                                <?php } ?>
                                             <?php elseif ($type === 'ppt' && strtolower(pathinfo($row['file_path'], PATHINFO_EXTENSION)) === 'pptx'): ?>
                                                 <a href="pptx_preview_enhanced.php?file=<?php echo urlencode($row['file_path']); ?>"
-                                                    class="btn btn-info btn-sm" target="_blank">
-                                                    <i class="fas fa-eye"></i> View
+                                                    class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                                    target="_blank"
+                                                    style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #3498db, #2ecc71); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    <i class="fas fa-eye me-1"></i> View
                                                 </a>
                                             <?php else: ?>
-                                                <a href="viewer.php?id=<?php echo $row['id']; ?>" 
-                                                   class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-                                                   target="_blank"
-                                                   style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #3498db, #2ecc71); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                <a href="viewer.php?id=<?php echo $row['id']; ?>"
+                                                    class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
+                                                    target="_blank"
+                                                    style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #3498db, #2ecc71); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                     <i class="fas fa-eye me-1"></i> View
                                                 </a>
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <button class="btn btn-secondary btn-sm d-flex align-items-center justify-content-center" 
-                                                    disabled
-                                                    style="min-width: 100px; border-radius: 8px; opacity: 0.7; cursor: not-allowed;">
+                                            <button
+                                                class="btn btn-secondary btn-sm d-flex align-items-center justify-content-center"
+                                                disabled
+                                                style="min-width: 100px; border-radius: 8px; opacity: 0.7; cursor: not-allowed;">
                                                 <i class="fas fa-eye-slash me-1"></i> Restricted
                                             </button>
                                         <?php endif; ?>
@@ -464,34 +497,36 @@ if (isset($_SESSION['user_id'])) {
                                             if ($accessStatus === 'approved'):
                                                 ?>
                                                 <a href="<?php echo htmlspecialchars($row['file_path']); ?>"
-                                                    class="btn btn-success btn-sm d-flex align-items-center justify-content-center" 
+                                                    class="btn btn-success btn-sm d-flex align-items-center justify-content-center"
                                                     download
                                                     style="min-width: 120px; border-radius: 8px; background: linear-gradient(135deg, #2ecc71, #27ae60); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                     <i class="fas fa-download me-1"></i> Download
                                                 </a>
                                             <?php elseif ($pendingStatus): ?>
-                                                <button class="btn btn-warning btn-sm d-flex align-items-center justify-content-center" 
-                                                        disabled
-                                                        style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; border: none; opacity: 0.8;">
+                                                <button class="btn btn-warning btn-sm d-flex align-items-center justify-content-center"
+                                                    disabled
+                                                    style="min-width: 100px; border-radius: 8px; background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; border: none; opacity: 0.8;">
                                                     <i class="fas fa-clock me-1"></i> Pending
                                                 </button>
                                             <?php else: ?>
                                                 <button class="btn btn-primary btn-sm d-flex align-items-center justify-content-center"
-                                                        onclick="showPaymentModal(<?php echo $row['id']; ?>, <?php echo $row['price']; ?>)"
-                                                        style="min-width: 120px; border-radius: 8px; background: linear-gradient(135deg, #9b59b6, #8e44ad); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                                    onclick="showPaymentModal(<?php echo $row['id']; ?>, <?php echo $row['price']; ?>)"
+                                                    style="min-width: 120px; border-radius: 8px; background: linear-gradient(135deg, #9b59b6, #8e44ad); border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                                                     <i class="fas fa-shopping-cart me-1"></i> Request
                                                 </button>
                                             <?php endif; ?>
                                         <?php else: ?>
-                                            <button class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
-                                                    onclick="window.location.href='login.html'"
-                                                    style="min-width: 140px; border-radius: 8px; border: 1px solid #3498db; color: #3498db;">
+                                            <button
+                                                class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
+                                                onclick="window.location.href='login.html'"
+                                                style="min-width: 140px; border-radius: 8px; border: 1px solid #3498db; color: #3498db;">
                                                 <i class="fas fa-lock me-1"></i> Login to Access
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-outline-primary btn-sm comment-btn d-flex align-items-center justify-content-center" 
-                                                data-content-id="<?php echo $row['id']; ?>"
-                                                style="min-width: 120px; border-radius: 8px; border: 1px solid #3498db; color: #3498db;">
+                                        <button
+                                            class="btn btn-outline-primary btn-sm comment-btn d-flex align-items-center justify-content-center"
+                                            data-content-id="<?php echo $row['id']; ?>"
+                                            style="min-width: 120px; border-radius: 8px; border: 1px solid #3498db; color: #3498db;">
                                             <i class="far fa-comment me-1"></i> Comments
                                         </button>
                                     </div>
@@ -508,11 +543,9 @@ if (isset($_SESSION['user_id'])) {
             .slider-container {
                 position: relative;
                 width: 100%;
-                overflow: visible;
-                margin-bottom: 10px;
-                padding: 0 40px;
+                padding: 0 30px;
             }
-
+            
             .slider-track {
                 display: flex;
                 gap: 20px;
@@ -587,10 +620,10 @@ if (isset($_SESSION['user_id'])) {
                 const modalBody = document.getElementById('commentsModalBody');
                 const commentForm = document.getElementById('commentForm');
                 const commentContentId = document.getElementById('commentContentId');
-                
+
                 // Set the content ID in the form
                 commentContentId.value = contentId;
-                
+
                 // Show loading state
                 modalBody.innerHTML = `
                     <div class="text-center">
@@ -599,15 +632,15 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                         <p class="mt-2">Loading comments...</p>
                     </div>`;
-                
+
                 // Show the modal
                 modal.show();
-                
+
                 try {
                     // Fetch comments
                     const response = await fetch(`get_comments.php?content_id=${contentId}`);
                     const data = await response.json();
-                    
+
                     if (data.comments && data.comments.length > 0) {
                         let commentsHtml = '<div class="comments-list" style="max-height: 300px; overflow-y: auto;">';
                         data.comments.forEach(comment => {
@@ -631,14 +664,14 @@ if (isset($_SESSION['user_id'])) {
                     console.error('Error loading comments:', error);
                     modalBody.innerHTML = '<p class="text-danger">Failed to load comments. Please try again later.</p>';
                 }
-                
+
                 // Handle comment form submission
                 if (commentForm) {
-                    commentForm.onsubmit = async function(e) {
+                    commentForm.onsubmit = async function (e) {
                         e.preventDefault();
                         const commentText = document.getElementById('commentText').value.trim();
                         if (!commentText) return;
-                        
+
                         try {
                             const response = await fetch('add_comment.php', {
                                 method: 'POST',
@@ -647,7 +680,7 @@ if (isset($_SESSION['user_id'])) {
                                 },
                                 body: `content_id=${encodeURIComponent(contentId)}&comment=${encodeURIComponent(commentText)}`
                             });
-                            
+
                             const result = await response.json();
                             if (result.success) {
                                 // Reload comments after successful submission
@@ -956,10 +989,10 @@ if (isset($_SESSION['user_id'])) {
             document.addEventListener('DOMContentLoaded', function () {
                 // Initialize video players
                 initLocalVideoPlayers();
-                
+
                 // Initialize comment button click handlers
                 document.querySelectorAll('.comment-btn').forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function () {
                         const contentId = this.dataset.contentId;
                         showCommentsModal(contentId);
                     });
@@ -1025,7 +1058,7 @@ if (isset($_SESSION['user_id'])) {
         </script>
     </div>
 
-    
+
 
     <!-- Payment Modal -->
     <div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -1235,7 +1268,7 @@ if (isset($_SESSION['user_id'])) {
             performSearch(e.target.value);
         });
 
-        document.getElementById('contentSections').addEventListener('click', function(e) {
+        document.getElementById('contentSections').addEventListener('click', function (e) {
             if (e.target.classList.contains('show-all-comments-btn')) {
                 e.preventDefault();
                 const contentId = e.target.dataset.contentId;
@@ -1245,7 +1278,7 @@ if (isset($_SESSION['user_id'])) {
             }
         });
 
-        document.getElementById('contentSections').addEventListener('click', function(e) {
+        document.getElementById('contentSections').addEventListener('click', function (e) {
             if (e.target.classList.contains('show-all-comments-btn')) {
                 e.preventDefault();
                 const contentId = e.target.dataset.contentId;
@@ -1334,7 +1367,7 @@ if (isset($_SESSION['user_id'])) {
 
 
 
-        // Handle paid button click
+            // Handle paid button click
             paidButton.onclick = () => {
                 paidButton.style.display = 'none';
                 statusElement.style.display = 'block';
@@ -1351,8 +1384,8 @@ if (isset($_SESSION['user_id'])) {
             };
         }
 
-     
-        
+
+
         function renderOfficePreview(fileUrl, fileType, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '<div class="text-center text-muted">Loading preview...</div>';
@@ -1379,8 +1412,8 @@ if (isset($_SESSION['user_id'])) {
                     .then(res => res.arrayBuffer())
                     .then(data => {
                         mammoth.convertToHtml({
-                                arrayBuffer: data
-                            })
+                            arrayBuffer: data
+                        })
                             .then(result => {
                                 container.innerHTML = result.value;
                             })
@@ -1396,24 +1429,24 @@ if (isset($_SESSION['user_id'])) {
         // PPTX Preview Function using native browser APIs
         async function renderPptxPreview(fileUrl, container) {
             container.innerHTML = '<div class="text-center text-muted">Loading PPTX preview...</div>';
-            
+
             try {
                 const response = await fetch(fileUrl);
                 const arrayBuffer = await response.arrayBuffer();
                 const slides = await parsePptxFile(arrayBuffer);
-                
+
                 if (slides.length === 0) {
                     container.innerHTML = '<div class="text-danger">No slides found in presentation.</div>';
                     return;
                 }
-                
+
                 // Show only 10-20% of slides (max 5 slides)
                 const maxSlides = Math.min(5, Math.max(2, Math.ceil(slides.length * 0.2)));
                 const previewSlides = slides.slice(0, maxSlides);
-                
+
                 container.innerHTML = createPptxViewer(previewSlides, slides.length);
                 initializePptxViewer();
-                
+
             } catch (error) {
                 console.error('Error loading PPTX:', error);
                 container.innerHTML = '<div class="text-danger">Failed to load PPTX preview.</div>';
@@ -1423,12 +1456,12 @@ if (isset($_SESSION['user_id'])) {
         // Parse PPTX file using native browser APIs
         async function parsePptxFile(arrayBuffer) {
             const slides = [];
-            
+
             try {
                 // Use native browser APIs to read ZIP file
                 const uint8Array = new Uint8Array(arrayBuffer);
                 const zipEntries = await readZipEntries(uint8Array);
-                
+
                 // Find slide XML files
                 const slideFiles = zipEntries
                     .filter(entry => entry.filename.match(/^ppt\/slides\/slide\d+\.xml$/i))
@@ -1437,18 +1470,18 @@ if (isset($_SESSION['user_id'])) {
                         const bNum = parseInt(b.filename.match(/slide(\d+)/i)[1]);
                         return aNum - bNum;
                     });
-                
+
                 // Parse each slide
                 for (const slideFile of slideFiles) {
                     const slideXml = new TextDecoder().decode(slideFile.data);
                     const slideContent = parseSlideXml(slideXml);
                     slides.push(slideContent);
                 }
-                
+
             } catch (error) {
                 console.error('Error parsing PPTX:', error);
             }
-            
+
             return slides;
         }
 
@@ -1456,7 +1489,7 @@ if (isset($_SESSION['user_id'])) {
         async function readZipEntries(uint8Array) {
             const entries = [];
             const view = new DataView(uint8Array.buffer);
-            
+
             // Find central directory
             let centralDirOffset = -1;
             for (let i = uint8Array.length - 22; i >= 0; i--) {
@@ -1465,44 +1498,44 @@ if (isset($_SESSION['user_id'])) {
                     break;
                 }
             }
-            
+
             if (centralDirOffset === -1) {
                 throw new Error('Invalid ZIP file');
             }
-            
+
             // Read central directory entries
             let offset = centralDirOffset;
             while (offset < uint8Array.length - 22) {
                 if (view.getUint32(offset, true) !== 0x02014b50) break; // Central directory signature
-                
+
                 const filenameLength = view.getUint16(offset + 28, true);
                 const extraFieldLength = view.getUint16(offset + 30, true);
                 const commentLength = view.getUint16(offset + 32, true);
                 const localHeaderOffset = view.getUint32(offset + 42, true);
-                
+
                 const filename = new TextDecoder().decode(
                     uint8Array.slice(offset + 46, offset + 46 + filenameLength)
                 );
-                
+
                 // Read local file header to get actual file data
                 const localView = new DataView(uint8Array.buffer, localHeaderOffset);
                 if (localView.getUint32(0, true) === 0x04034b50) { // Local file header signature
                     const localFilenameLength = localView.getUint16(26, true);
                     const localExtraFieldLength = localView.getUint16(28, true);
                     const compressedSize = localView.getUint32(18, true);
-                    
+
                     const dataOffset = localHeaderOffset + 30 + localFilenameLength + localExtraFieldLength;
                     const fileData = uint8Array.slice(dataOffset, dataOffset + compressedSize);
-                    
+
                     entries.push({
                         filename: filename,
                         data: fileData
                     });
                 }
-                
+
                 offset += 46 + filenameLength + extraFieldLength + commentLength;
             }
-            
+
             return entries;
         }
 
@@ -1510,18 +1543,18 @@ if (isset($_SESSION['user_id'])) {
         function parseSlideXml(xmlString) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
-            
+
             // Extract text content from <a:t> elements
             const textElements = xmlDoc.querySelectorAll('t');
             const textContent = [];
-            
+
             textElements.forEach(element => {
                 const text = element.textContent.trim();
                 if (text) {
                     textContent.push(text);
                 }
             });
-            
+
             return {
                 title: textContent[0] || 'Untitled Slide',
                 content: textContent.slice(1)
@@ -1730,7 +1763,7 @@ if (isset($_SESSION['user_id'])) {
             const nextBtn = document.getElementById('pptx-next-btn');
             const indicator = document.getElementById('pptx-indicator');
             const unlockOverlay = document.getElementById('pptx-unlock-overlay');
-            
+
             function updateSlide() {
                 slides.forEach((slide, index) => {
                     slide.classList.remove('active', 'prev');
@@ -1740,14 +1773,14 @@ if (isset($_SESSION['user_id'])) {
                         slide.classList.add('prev');
                     }
                 });
-                
+
                 const totalSlides = parseInt(indicator.textContent.match(/\/(\d+)\)/)[1]);
                 const previewSlides = slides.length;
-                indicator.textContent = `Slide ${ currentSlide + 1 } of ${ previewSlides } (Preview: ${ previewSlides }/${totalSlides})`;
-                
+                indicator.textContent = `Slide ${currentSlide + 1} of ${previewSlides} (Preview: ${previewSlides}/${totalSlides})`;
+
                 prevBtn.disabled = currentSlide === 0;
                 nextBtn.disabled = currentSlide === slides.length - 1;
-                
+
                 // Show unlock overlay on last slide
                 if (currentSlide === slides.length - 1) {
                     setTimeout(() => {
@@ -1757,21 +1790,21 @@ if (isset($_SESSION['user_id'])) {
                     unlockOverlay.style.display = 'none';
                 }
             }
-            
+
             prevBtn.addEventListener('click', () => {
                 if (currentSlide > 0) {
                     currentSlide--;
                     updateSlide();
                 }
             });
-            
+
             nextBtn.addEventListener('click', () => {
                 if (currentSlide < slides.length - 1) {
                     currentSlide++;
                     updateSlide();
                 }
             });
-            
+
             // Keyboard navigation
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowLeft' && currentSlide > 0) {
@@ -1782,7 +1815,7 @@ if (isset($_SESSION['user_id'])) {
                     updateSlide();
                 }
             });
-            
+
             updateSlide();
         }
 
@@ -1792,7 +1825,7 @@ if (isset($_SESSION['user_id'])) {
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
         // SPA-style content viewer
         function loadContentViewer(url, title) {
             // Create overlay
@@ -1809,7 +1842,7 @@ if (isset($_SESSION['user_id'])) {
             display: flex;
             flex - direction: column;
             `;
-            
+
             // Create header with back button
             const header = document.createElement('div');
             header.style.cssText = `
@@ -1820,7 +1853,7 @@ if (isset($_SESSION['user_id'])) {
             justify - content: space - between;
             box - shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             `;
-            
+
             header.innerHTML = `
                 < div style = "display: flex; align-items: center; gap: 15px;" >
                     <button onclick="closeContentViewer()" class="btn btn-outline-secondary">
@@ -1829,7 +1862,7 @@ if (isset($_SESSION['user_id'])) {
                     <h5 style="margin: 0; color: #333;">${title}</h5>
                 </div >
                 `;
-            
+
             // Create content iframe
             const iframe = document.createElement('iframe');
             iframe.src = url;
@@ -1856,7 +1889,7 @@ if (isset($_SESSION['user_id'])) {
         }
 
         // Handle comment button click
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (e.target.closest('.comment-btn')) {
                 const contentId = e.target.closest('.comment-btn').dataset.contentId;
                 showCommentsModal(contentId);
@@ -1864,14 +1897,14 @@ if (isset($_SESSION['user_id'])) {
         });
 
         // Handle comment form submission
-        document.addEventListener('submit', async function(e) {
+        document.addEventListener('submit', async function (e) {
             if (e.target && e.target.id === 'commentForm') {
                 e.preventDefault();
                 const contentId = document.getElementById('commentContentId').value;
                 const commentText = document.getElementById('commentText').value.trim();
-                
+
                 if (!commentText) return;
-                
+
                 try {
                     const response = await fetch('add_comment.php', {
                         method: 'POST',
@@ -1880,7 +1913,7 @@ if (isset($_SESSION['user_id'])) {
                         },
                         body: `content_id=${contentId}&comment=${encodeURIComponent(commentText)}`
                     });
-                    
+
                     const result = await response.json();
                     if (result.success) {
                         // Reload comments after successful submission
@@ -1901,12 +1934,12 @@ if (isset($_SESSION['user_id'])) {
             const modal = new bootstrap.Modal(document.getElementById('commentsModal'));
             const modalBody = document.getElementById('commentsModalBody');
             const commentForm = document.getElementById('commentForm');
-            
+
             // Set content ID in the form
             if (commentForm) {
                 document.getElementById('commentContentId').value = contentId;
             }
-            
+
             // Show loading state
             modalBody.innerHTML = `
                 <div class="text-center">
@@ -1914,14 +1947,14 @@ if (isset($_SESSION['user_id'])) {
                         <span class="visually-hidden">Loading...</span>
                     </div>
                 </div>`;
-                
+
             modal.show();
-            
+
             try {
                 // Fetch comments
                 const response = await fetch(`get_comments.php?content_id=${contentId}`);
                 const data = await response.json();
-                
+
                 if (data.comments && data.comments.length > 0) {
                     let commentsHtml = '<div class="comments-list" style="max-height: 300px; overflow-y: auto;">';
                     data.comments.forEach(comment => {
@@ -1947,50 +1980,25 @@ if (isset($_SESSION['user_id'])) {
             }
         }
     </script>
-    
+
     <script>
-    // Global function to show comments modal
-    let currentModal = null;
-    
-    async function showCommentsModal(contentId) {
-        const modal = document.getElementById('commentsModal');
-        const modalBody = document.getElementById('commentsModalBody');
-        const commentForm = document.getElementById('commentForm');
-        const commentContentId = document.getElementById('commentContentId');
-        
-        if (!modal || !modalBody) {
-            console.error('Required modal elements not found');
-            return;
-        }
-        
-        // Dispose of any existing modal instance
-        if (currentModal) {
-            currentModal.hide();
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
+        // Global function to show comments modal
+        let currentModal = null;
+
+        async function showCommentsModal(contentId) {
+            const modal = document.getElementById('commentsModal');
+            const modalBody = document.getElementById('commentsModalBody');
+            const commentForm = document.getElementById('commentForm');
+            const commentContentId = document.getElementById('commentContentId');
+
+            if (!modal || !modalBody) {
+                console.error('Required modal elements not found');
+                return;
             }
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-        
-        // Create new modal instance
-        currentModal = new bootstrap.Modal(modal, {
-            backdrop: true,
-            keyboard: true
-        });
-        
-        // Set the content ID in the form if it exists
-        if (commentContentId) {
-            commentContentId.value = contentId;
-        }
-        
-        // Clean up on modal close
-        const handleHidden = () => {
+
+            // Dispose of any existing modal instance
             if (currentModal) {
-                currentModal.dispose();
-                currentModal = null;
+                currentModal.hide();
                 const backdrop = document.querySelector('.modal-backdrop');
                 if (backdrop) {
                     backdrop.remove();
@@ -1999,34 +2007,59 @@ if (isset($_SESSION['user_id'])) {
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
             }
-            modal.removeEventListener('hidden.bs.modal', handleHidden);
-        };
-        
-        modal.addEventListener('hidden.bs.modal', handleHidden);
-        
-        // Show loading state
-        modalBody.innerHTML = `
+
+            // Create new modal instance
+            currentModal = new bootstrap.Modal(modal, {
+                backdrop: true,
+                keyboard: true
+            });
+
+            // Set the content ID in the form if it exists
+            if (commentContentId) {
+                commentContentId.value = contentId;
+            }
+
+            // Clean up on modal close
+            const handleHidden = () => {
+                if (currentModal) {
+                    currentModal.dispose();
+                    currentModal = null;
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }
+                modal.removeEventListener('hidden.bs.modal', handleHidden);
+            };
+
+            modal.addEventListener('hidden.bs.modal', handleHidden);
+
+            // Show loading state
+            modalBody.innerHTML = `
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="mt-2">Loading comments...</p>
             </div>`;
-        
-        // Show the modal
-        currentModal.show();
-        
-        try {
-            // Fetch comments
-            const response = await fetch(`get_comments.php?content_id=${contentId}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = await response.json();
-            
-            if (data.comments && data.comments.length > 0) {
-                let commentsHtml = '<div class="comments-list" style="max-height: 300px; overflow-y: auto;">';
-                data.comments.forEach(comment => {
-                    commentsHtml += `
+
+            // Show the modal
+            currentModal.show();
+
+            try {
+                // Fetch comments
+                const response = await fetch(`get_comments.php?content_id=${contentId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const data = await response.json();
+
+                if (data.comments && data.comments.length > 0) {
+                    let commentsHtml = '<div class="comments-list" style="max-height: 300px; overflow-y: auto;">';
+                    data.comments.forEach(comment => {
+                        commentsHtml += `
                         <div class="card mb-2">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-start">
@@ -2036,94 +2069,94 @@ if (isset($_SESSION['user_id'])) {
                                 <p class="card-text mb-0">${escapeHtml(comment.comment || '')}</p>
                             </div>
                         </div>`;
-                });
-                commentsHtml += '</div>';
-                modalBody.innerHTML = commentsHtml;
-            } else {
-                modalBody.innerHTML = '<p class="text-muted text-center">No comments yet. Be the first to comment!</p>';
-            }
-        } catch (error) {
-            console.error('Error loading comments:', error);
-            modalBody.innerHTML = `
+                    });
+                    commentsHtml += '</div>';
+                    modalBody.innerHTML = commentsHtml;
+                } else {
+                    modalBody.innerHTML = '<p class="text-muted text-center">No comments yet. Be the first to comment!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading comments:', error);
+                modalBody.innerHTML = `
                 <div class="alert alert-danger">
                     Failed to load comments. Please try again later.
                     <div class="small text-muted mt-1">${error.message || 'Unknown error'}</div>
                 </div>`;
-        }
-        
-        // Handle comment form submission
-        if (commentForm) {
-            commentForm.onsubmit = async function(e) {
-                e.preventDefault();
-                const commentText = document.getElementById('commentText')?.value?.trim();
-                if (!commentText) return;
-                
-                const submitBtn = commentForm.querySelector('button[type="submit"]');
-                const originalBtnText = submitBtn?.innerHTML;
-                
-                try {
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Posting...';
-                    }
-                    
-                    const response = await fetch('add_comment.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `content_id=${encodeURIComponent(contentId)}&comment=${encodeURIComponent(commentText)}`
-                    });
-                    
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        // Reload comments after successful submission
-                        const commentInput = document.getElementById('commentText');
-                        if (commentInput) commentInput.value = '';
-                        showCommentsModal(contentId);
-                    } else {
-                        alert(result.message || 'Failed to post comment');
-                    }
-                } catch (error) {
-                    console.error('Error posting comment:', error);
-                    alert(`Failed to post comment: ${error.message || 'Please try again'}`);
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        if (originalBtnText) submitBtn.innerHTML = originalBtnText;
-                    }
-                }
-            };
-        }
-    }
-    
-    // Initialize comment button click handlers after DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle clicks on comment buttons
-        document.addEventListener('click', function(e) {
-            const commentBtn = e.target.closest('.comment-btn');
-            if (commentBtn) {
-                const contentId = commentBtn.dataset.contentId;
-                if (contentId) {
-                    showCommentsModal(contentId);
-                }
             }
-        });
-        
-        // Also initialize any existing comment buttons on page load
-        document.querySelectorAll('.comment-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const contentId = this.dataset.contentId;
-                if (contentId) {
-                    showCommentsModal(contentId);
+
+            // Handle comment form submission
+            if (commentForm) {
+                commentForm.onsubmit = async function (e) {
+                    e.preventDefault();
+                    const commentText = document.getElementById('commentText')?.value?.trim();
+                    if (!commentText) return;
+
+                    const submitBtn = commentForm.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn?.innerHTML;
+
+                    try {
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Posting...';
+                        }
+
+                        const response = await fetch('add_comment.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `content_id=${encodeURIComponent(contentId)}&comment=${encodeURIComponent(commentText)}`
+                        });
+
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Reload comments after successful submission
+                            const commentInput = document.getElementById('commentText');
+                            if (commentInput) commentInput.value = '';
+                            showCommentsModal(contentId);
+                        } else {
+                            alert(result.message || 'Failed to post comment');
+                        }
+                    } catch (error) {
+                        console.error('Error posting comment:', error);
+                        alert(`Failed to post comment: ${error.message || 'Please try again'}`);
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            if (originalBtnText) submitBtn.innerHTML = originalBtnText;
+                        }
+                    }
+                };
+            }
+        }
+
+        // Initialize comment button click handlers after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            // Handle clicks on comment buttons
+            document.addEventListener('click', function (e) {
+                const commentBtn = e.target.closest('.comment-btn');
+                if (commentBtn) {
+                    const contentId = commentBtn.dataset.contentId;
+                    if (contentId) {
+                        showCommentsModal(contentId);
+                    }
                 }
             });
+
+            // Also initialize any existing comment buttons on page load
+            document.querySelectorAll('.comment-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const contentId = this.dataset.contentId;
+                    if (contentId) {
+                        showCommentsModal(contentId);
+                    }
+                });
+            });
         });
-    });
     </script>
-    
+
     <!-- Comments Modal -->
     <div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -2140,23 +2173,24 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="modal-footer">
-                    <form id="commentForm" class="w-100">
-                        <input type="hidden" id="commentContentId" name="content_id">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="commentText" placeholder="Write a comment..." required>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> Post
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="modal-footer">
+                        <form id="commentForm" class="w-100">
+                            <input type="hidden" id="commentContentId" name="content_id">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="commentText" placeholder="Write a comment..."
+                                    required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Post
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 <?php else: ?>
-                <div class="modal-footer justify-content-center">
-                    <a href="login.html" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login to Comment
-                    </a>
-                </div>
+                    <div class="modal-footer justify-content-center">
+                        <a href="login.html" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login to Comment
+                        </a>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -2187,14 +2221,14 @@ if (isset($_SESSION['user_id'])) {
             sessionStorage.setItem('videoPreviewed', '1');
             window.open(url, '_blank');
         }
-        window.addEventListener('focus', function() {
+        window.addEventListener('focus', function () {
             if (sessionStorage.getItem('videoPreviewed')) {
                 showVideoBuyModal();
                 sessionStorage.removeItem('videoPreviewed');
             }
         });
     </script>
-    
+
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
