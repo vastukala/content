@@ -1,0 +1,12 @@
+<table border='1'><tr>
+        <th>ID</th>
+        <th>Account No</th>
+        <th>Name</th>
+        <th>Date</th>
+        <th>Morning</th>
+        <th>Evening</th>
+        <th>Cow (Ltr)</th>
+        <th>Buffalo (Ltr)</th>
+        <th>Fat</th>
+        <th>SNF</th>
+    </tr><tr><td>3</td><td>89</td><td>Radha</td><td>2025-06-06</td><td>M</td><td>-</td><td>54.700</td><td>-</td><td>67.7</td><td>56.8</td></tr><tr><td>2</td><td>101</td><td>Pratiksha</td><td>2025-06-13</td><td>M</td><td>-</td><td>-</td><td>2.000</td><td>1.0</td><td>34.0</td></tr></table>
